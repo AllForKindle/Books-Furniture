@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Kindle Book Fortune</title>
+    <style>
+        body { font-family: sans-serif; background: white; color: black; padding: 10px; margin: 0; }
+        .header { text-align: center; margin-bottom: 12px; border-bottom: 2px dashed black; padding-bottom: 8px; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: bold; }
+        .screen { display: block; }
+        .control-panel { display: flex; gap: 10px; margin-bottom: 15px; }
+        .action-btn { flex: 1; font-size: 16px; font-weight: bold; padding: 12px; background: white; border: 3px solid black; cursor: pointer; }
+        #books-container { margin-bottom: 15px; }
+        .book-row { display: flex; gap: 5px; margin-bottom: 8px; }
+        .book-input { flex: 1; font-size: 18px; font-weight: bold; padding: 8px; border: 3px solid black; background: white; }
+        .book-input:focus { outline: none; }
+        .delete-btn { font-size: 18px; font-weight: bold; padding: 8px 15px; background: white; border: 3px solid black; cursor: pointer; }
+        .build-btn { width: 100%; font-size: 18px; font-weight: bold; padding: 15px; background: black; color: white; border: 4px solid black; cursor: pointer; }
+        .fortune-box { border: 4px solid black; padding: 40px 15px; text-align: center; background: white; min-height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+        #result-text { font-size: 24px; font-weight: bold; }
+        .spin-btn { width: 100%; font-size: 20px; font-weight: bold; padding: 18px; background: black; color: white; border: 4px solid black; cursor: pointer; margin-bottom: 12px; }
+        .back-btn { width: 100%; font-size: 16px; font-weight: bold; padding: 12px; background: white; color: black; border: 3px solid black; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Колесо Фортуны</h1>
+    </div>
+
+    <div id="setup-screen" class="screen">
+        <div class="control-panel">
+            <button class="action-btn" onclick="addBookRow('')">➕ Ряд книг</button>
+            <button class="action-btn" onclick="saveToUrl()">💾 Сохранить</button>
+        </div>
+        <div id="books-container"></div>
+        <button class="build-btn" onclick="openFortuneScreen()">👉 СОЗДАТЬ КОЛЕСО ФОРТУНЫ</button>
+    </div>
+
+    <div id="fortune-screen" class="screen" style="display: none;">
+        <div class="fortune-box">
+            <div id="result-text">Нажмите кнопку ниже!</div>
+        </div>
+        <button class="spin-btn" onclick="pickRandomBook()">🎰 ИСПЫТАТЬ УДАЧУ 🎰</button>
+        <button class="back-btn" onclick="openSetupScreen()">← Назад к списку</button>
+    </div>
+
+    <script>
+        var booksList = [];
+
+        window.onload = function() {
+            var hash = window.location.hash.substring(1);
+            if (hash) {
+                try {
+                    var decoded = decodeURIComponent(hash);
+                    var savedBooks = decoded.split('|||');
+                    for (var i = 0; i < savedBooks.length; i++) {
+                        if (savedBooks[i].trim() !== '') {
+                            addBookRow(savedBooks[i]);
+                        }
+                    }
+                } catch(e) {}
+            }
+            var container = document.getElementById('books-container');
+            if (container.children.length === 0) {
+                addBookRow('');
+                addBookRow('');
+                addBookRow('');
+            }
+        };
+
+        function addBookRow(value) {
+            var container = document.getElementById('books-container');
+            var rowDiv = document.createElement('div');
+            rowDiv.className = 'book-row';
+            
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'book-input';
+            input.placeholder = 'Название книги...';
+            input.value = value;
+            
+            var delBtn = document.createElement('button');
+            delBtn.className = 'delete-btn';
+            delBtn.innerHTML = 'X';
+            delBtn.onclick = function() {
+                container.removeChild(rowDiv);
+            };
+            
+            rowDiv.appendChild(input);
+            rowDiv.appendChild(delBtn);
+            container.appendChild(rowDiv);
+        }
+
+        function saveToUrl() {
+            var inputs = document.getElementsByClassName('book-input');
+            var currentBooks = [];
+            for (var i = 0; i < inputs.length; i++) {
+                if (inputs[i].value.trim() !== '') {
+                    currentBooks.push(inputs[i].value.trim());
+                }
+            }
+            var combined = encodeURIComponent(currentBooks.join('|||'));
+            window.location.hash = combined;
+            alert("ГОТОВО! Обнови закладку в браузере Kindle!");
+        }
+
+        /* Вырезан кусок с анимацией для экономии места и FPS */
+        function openFortuneScreen() {
+            var inputs = document.getElementsByClassName('book-input');
+            booksList = [];
+            for (var i = 0; i < inputs.length; i++) {
+                var val = inputs[i].value.trim();
+                if (val !== '') {
+                    booksList.push(val);
+                }
+            }
+            if (booksList.length === 0) {
+                alert("Ошибка: Заполни хотя бы один ряд!");
+                return;
+            }
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('fortune-screen').style.display = 'block';
+            document.getElementById('result-text').innerText = "Готово к старту!";
+        }
+
+        function openSetupScreen() {
+            document.getElementById('fortune-screen').style.display = 'none';
+            document.getElementById('setup-screen').style.display = 'block';
+        }
+
+        function pickRandomBook() {
+            if (booksList.length === 0) {
+                document.getElementById('result-text').innerText = "Список пуст...";
+                return;
+            }
+            var randomIndex = Math.floor(Math.random() * booksList.length);
+            document.getElementById('result-text').innerText = "📖 " + booksList[randomIndex];
+        }
+    </script>
+</body>
+</html>
